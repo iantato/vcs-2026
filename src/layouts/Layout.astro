@@ -1,0 +1,271 @@
+---
+import { Font } from "astro:assets";
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} | VCS 2026</title>
+
+    <Font cssVariable="--font-minecraft"/>
+    <Font cssVariable="--font-minecraft-ten" />
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="logo">VCS 2026</div>
+
+      <!-- Mobile Burger Toggle -->
+      <button class="burger-menu" id="burger-btn" aria-label="Toggle navigation">
+        <span class="burger-lines"></span>
+      </button>
+
+      <nav id="nav-links">
+        <a href="/">Home</a>
+        <a href="/admin">Admin Scanner</a>
+        <a href="/attendance">Attendance</a>
+        <a href="/profile">My Profile</a>
+      </nav>
+    </header>
+
+    <main class="container">
+      <slot />
+    </main>
+
+    <script>
+      const burgerBtn = document.getElementById('burger-btn');
+      const navLinks = document.getElementById('nav-links');
+
+      burgerBtn?.addEventListener('click', () => {
+        navLinks?.classList.toggle('nav-active');
+        burgerBtn.classList.toggle('burger-active');
+      });
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --mc-bg: #111111;      /* Minecraft.net dark */
+    --mc-text: #e0e0e0;
+    --mc-accent: #3C8527;  /* Minecraft.net green */
+    --mc-accent-hover: #2E6B1D;
+    --mc-border: #333333;
+    --mc-panel-bg: #1d1d1d;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-minecraft), "Courier New", Courier, monospace;
+    background-color: var(--mc-bg);
+    background-image: radial-gradient(circle at top center, #1b261a 0%, #111111 100%);
+    min-height: 100vh;
+    color: var(--mc-text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-minecraft-ten), "Courier New", Courier, monospace;
+    font-weight: normal;
+    color: #f0f6fc;
+    margin-top: 0;
+  }
+
+  .navbar {
+    background-color: var(--mc-accent);
+    border-bottom: 2px solid var(--mc-accent-hover);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: var(--font-minecraft-ten);
+    font-size: 1.8rem;
+    color: #ffffff;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+    z-index: 101;
+  }
+
+  /* Hamburger Menu Button (Hidden on Desktop) */
+  .burger-menu {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 30px;
+    height: 24px;
+    position: relative;
+    z-index: 101;
+    padding: 0;
+  }
+
+  .burger-lines {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background-color: #ffffff;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: background-color 0.3s;
+    box-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+  }
+
+  .burger-lines::before,
+  .burger-lines::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 3px;
+    background-color: #ffffff;
+    left: 0;
+    transition: transform 0.3s ease;
+    box-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+  }
+
+  .burger-lines::before { top: -8px; }
+  .burger-lines::after { bottom: -8px; }
+
+  /* Burger Active Animation */
+  .burger-active .burger-lines { background-color: transparent; box-shadow: none; }
+  .burger-active .burger-lines::before { top: 0; transform: rotate(45deg); }
+  .burger-active .burger-lines::after { bottom: 0; transform: rotate(-45deg); }
+
+  nav {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  nav a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: opacity 0.2s;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.1);
+  }
+
+  nav a:hover {
+    opacity: 0.8;
+  }
+
+  @media (max-width: 768px) {
+    .burger-menu {
+      display: block;
+    }
+
+    nav {
+      /* Mobile Menu Styles */
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background-color: var(--mc-panel-bg);
+      border-bottom: 2px solid var(--mc-border);
+      flex-direction: column;
+      gap: 0;
+      padding: 0;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    }
+
+    nav.nav-active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    nav a {
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 1.2rem;
+    }
+
+    nav a:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+
+  .mc-panel {
+    background-color: var(--mc-panel-bg);
+    background-image: linear-gradient(180deg, rgba(29, 29, 29, 1) 0%, rgba(20, 20, 20, 1) 100%);
+    border: 1px solid var(--mc-border);
+    color: var(--mc-text);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .mc-button {
+    display: inline-block;
+    text-align: center;
+    text-decoration: none !important;
+    background-color: var(--mc-accent);
+    background-image: linear-gradient(180deg, #449130 0%, #3C8527 100%);
+    color: #ffffff !important;
+    border: 2px solid #2a5c1b;
+    border-radius: 4px;
+    padding: 0.75rem 1.5rem;
+    font-family: var(--font-minecraft);
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,0.2), 0 4px 0 #1b3d11;
+    transition: transform 0.1s ease, background-image 0.1s ease;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  }
+
+  .mc-button:hover {
+    background-image: linear-gradient(180deg, #4c9c36 0%, #449130 100%);
+    border-color: #316d21;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,0.3), 0 4px 0 #1b3d11;
+    transform: translateY(0);
+  }
+
+  .mc-button:active {
+    transform: translateY(4px);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,0.1), 0 0 0 #1b3d11;
+  }
+
+  .mc-input {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    border: 1px solid var(--mc-border);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    font-family: var(--font-minecraft);
+    font-size: 1.1rem;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+  }
+
+  .mc-input:focus {
+    outline: none;
+    border-color: #58a6ff;
+  }
+</style>

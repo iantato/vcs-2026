@@ -1,17 +1,61 @@
 ---
-
+import Layout from '../layouts/Layout.astro';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="Home">
+  <div class="hero">
+    <h1>Vacation Church School</h1>
+    <p class="subtitle">Get ready to uncover the wisdom of God in an epic adventure!</p>
+
+    <div class="features mc-panel">
+      <h2>Your Journey Starts Here</h2>
+      <div class="grid">
+        <a href="/admin" class="mc-button" style="text-align: center; display: block; text-decoration: none;">Launch Admin Scanner</a>
+        <a href="/attendance" class="mc-button" style="text-align: center; display: block; text-decoration: none;">View Attendance Rankings</a>
+        <a href="/profile" class="mc-button" style="text-align: center; display: block; text-decoration: none;">View Your Profile</a>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .hero {
+    text-align: center;
+    margin-top: 4rem;
+  }
+
+  .hero h1 {
+    font-size: 3.5rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+    background: linear-gradient(135deg, #f0f6fc 0%, #a4e698 50%, #3C8527 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 20px rgba(60, 133, 39, 0.4);
+    filter: drop-shadow(0 0 10px rgba(60, 133, 39, 0.2));
+    letter-spacing: 2px;
+  }
+
+  .subtitle {
+    font-size: 1.25rem;
+    color: #8b949e;
+    margin-bottom: 3rem;
+  }
+
+  .features {
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .features h2 {
+    color: #f0f6fc;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+  }
+
+  .grid {
+    display: grid;
+    gap: 1rem;
+  }
+</style>

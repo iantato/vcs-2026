@@ -1,0 +1,298 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// Mock data for attendees
+const attendees = [
+  { name: 'SteveMiner', group: 'Diamond Diggers', days: 5, rank: 'Netherite' },
+  { name: 'AlexCraft', group: 'Ender Explorers', days: 4, rank: 'Diamond' },
+  { name: 'GodsBuilder', group: 'Redstone Engineers', days: 3, rank: 'Gold' },
+  { name: 'Notch_Fan', group: 'Diamond Diggers', days: 2, rank: 'Iron' },
+  { name: 'NewPlayer99', group: 'Ender Explorers', days: 1, rank: 'Wood/Coal' }
+];
+
+const groupEmeralds = [
+  { group: 'Diamond Diggers', emeralds: 245 },
+  { group: 'Ender Explorers', emeralds: 180 },
+  { group: 'Redstone Engineers', emeralds: 156 }
+];
+
+const ranks = {
+  'Netherite': { color: '#443A4B', img: 'https://minecraft.wiki/images/Netherite_Ingot_JE1.png' },
+  'Diamond': { color: '#55FFFF', img: 'https://minecraft.wiki/images/Diamond_JE3_BE3.png' },
+  'Gold': { color: '#FFAA00', img: 'https://minecraft.wiki/images/Gold_Ingot_JE4_BE2.png' },
+  'Iron': { color: '#FFFFFF', img: 'https://minecraft.wiki/images/Iron_Ingot_JE3_BE2.png' },
+  'Wood/Coal': { color: '#555555', img: 'https://minecraft.wiki/images/Coal_JE4_BE3.png' }
+}
+---
+
+<Layout title="Attendance List">
+  <div class="attendance-container">
+    <div class="header-content">
+      <h1 class="glow-title">Attendance Rankings</h1>
+      <p>5 Days of Wisdom - The more you attend, the higher your tier!</p>
+    </div>
+
+    <!-- Group Emeralds Leaderboard -->
+    <div class="mc-panel" style="padding: 0; overflow: hidden; background: #0d1117; margin-bottom: 2rem;">
+      <h2 style="padding: 1rem 1rem 0 1rem; margin: 0; color: #f0f6fc;">Group Emeralds</h2>
+      <div class="table-responsive">
+        <table class="mc-table">
+          <thead>
+            <tr>
+              <th style="width: 60px; text-align: center;">Rank</th>
+              <th style="text-align: center;">Group</th>
+              <th style="text-align: center;">Total Emeralds</th>
+            </tr>
+          </thead>
+          <tbody>
+            {groupEmeralds.map((grp, index) => (
+              <tr>
+                <td data-label="Rank" style="text-align: center; font-family: var(--font-minecraft-ten); color: #8b949e; font-size: 1.2rem;">
+                  {index + 1}
+                </td>
+                <td data-label="Group" style="text-align: center;">
+                  <span class="group-label">{grp.group}</span>
+                </td>
+                <td data-label="Total Emeralds" style="text-align: center; font-family: var(--font-minecraft-ten); color: #55FF55; font-size: 1.2rem;">
+                  {grp.emeralds}
+                  <img src="https://minecraft.wiki/images/Emerald_JE3_BE3.png" alt="Emerald" width="20" style="vertical-align: middle; margin-left: 8px; image-rendering: pixelated;" onerror="this.src='/favicon.svg'"/>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Individual Attendance Leaderboard -->
+    <div class="mc-panel" style="padding: 0; overflow: hidden; background: #0d1117;">
+      <h2 style="padding: 1rem 1rem 0 1rem; margin: 0; color: #f0f6fc;">Individual Attendance</h2>
+      <div class="table-responsive">
+        <table class="mc-table">
+          <thead>
+            <tr>
+              <th style="width: 60px; text-align: center;">#</th>
+              <th style="text-align: left;">Profile</th>
+              <th style="text-align: center;">Group</th>
+              <th style="text-align: center;">Score (Days)</th>
+              <th style="text-align: center;">Tier</th>
+            </tr>
+          </thead>
+          <tbody>
+            {attendees.map((user, index) => (
+              <tr>
+                <td data-label="#" style="text-align: center; font-family: var(--font-minecraft-ten); color: #8b949e; font-size: 1.2rem;">
+                  {index + 1}
+                </td>
+                <td data-label="Profile" style="text-align: left;">
+                  <div class="user-cell">
+                    <img src={`https://minotar.net/avatar/${user.name}/32.png`} alt={`${user.name}'s Head`} class="avatar-head" onerror="this.src='/favicon.svg'"/>
+                    <span class="user-name">{user.name}</span>
+                  </div>
+                </td>
+                <td data-label="Group" style="text-align: center;">
+                  <span class="group-label">{user.group}</span>
+                </td>
+                <td data-label="Score (Days)" style="text-align: center;">
+                  <span class="score-label">{user.days}</span>
+                </td>
+                <td data-label="Tier" style="text-align: center;">
+                  <div class="rank-badge" style={`color: ${ranks[user.rank].color}; border-color: ${ranks[user.rank].color};`}>
+                    {user.rank}
+                    <img src={ranks[user.rank].img} alt={user.rank} width="20" height="20" style="image-rendering: pixelated; margin-left: 8px;" onerror="this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='"/>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .attendance-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .header-content {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .glow-title {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    color: #f0f6fc;
+    background-image: linear-gradient(135deg, #f0f6fc 0%, #a4e698 50%, #3C8527 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 10px rgba(60, 133, 39, 0.4));
+  }
+
+  .header-content p {
+    color: #8b949e;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+  }
+
+  .mc-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--mc-text);
+  }
+
+  .mc-table th {
+    padding: 1.25rem 1rem 0.75rem 1rem;
+    text-align: left;
+    background-color: #161b22;
+    border-bottom: 1px solid #30363d;
+    font-family: var(--font-minecraft-ten);
+    color: #8b949e;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    vertical-align: middle;
+    line-height: 1;
+  }
+
+  .mc-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+    background-color: #0d1117;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  @media (max-width: 768px) {
+    .table-responsive {
+      overflow-x: hidden;
+    }
+
+    .mc-table, .mc-table tbody, .mc-table tr {
+      display: block;
+      width: 100%;
+    }
+
+    .mc-table td {
+      display: block;
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    .mc-table thead {
+      display: none;
+    }
+
+    .mc-table tr {
+      border-bottom: 3px solid #30363d;
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .mc-table tr:last-child {
+      border-bottom: none;
+    }
+
+    .mc-table td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(48, 54, 61, 0.2);
+      text-align: right !important;
+      padding: 0.75rem 1rem;
+      white-space: normal;
+      box-sizing: border-box;
+      word-break: break-word;
+    }
+
+    .mc-table td:last-child {
+      border-bottom: none;
+    }
+
+    .mc-table td::before {
+      content: attr(data-label);
+      font-family: var(--font-minecraft-ten);
+      color: #8b949e;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      margin-right: 1rem;
+      text-align: left;
+      flex-shrink: 0;
+    }
+
+    .user-cell {
+      justify-content: flex-end; /* right-align flex items in the card */
+      text-align: right;
+    }
+
+    .rank-badge {
+      max-width: 100%;
+      box-sizing: border-box;
+      word-break: break-all;
+    }
+  }
+
+  .mc-table tr:hover td {
+    background-color: #161b22;
+  }
+
+  .mc-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .user-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .avatar-head {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+    border-radius: 4px;
+    border: 1px solid #30363d;
+  }
+
+  .user-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #c9d1d9;
+  }
+
+  .group-label {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #8b949e;
+  }
+
+  .score-label {
+    font-family: var(--font-minecraft-ten);
+    font-size: 1.2rem;
+    color: var(--mc-accent);
+  }
+
+  .rank-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-minecraft);
+    font-size: 1rem;
+    text-transform: uppercase;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 4px 12px;
+    border-radius: 4px;
+    border: 1px solid #30363d;
+  }
+</style>
