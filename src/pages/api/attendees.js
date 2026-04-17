@@ -11,7 +11,7 @@ export async function GET() {
           emeralds INTEGER DEFAULT 0
         )
       `;
-      
+
       await sql`
         CREATE TABLE IF NOT EXISTS attendees (
           id SERIAL PRIMARY KEY,
