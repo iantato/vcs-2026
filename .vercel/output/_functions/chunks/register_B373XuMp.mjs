@@ -1,11 +1,11 @@
-import sql from '../../db/index.js';
+import { s as sql } from './index_CZzODHOr.mjs';
 
 // Generate a unique NFC UID (hex format)
 function generateUID() {
   return 'VCS' + Math.random().toString(16).substring(2, 10).toUpperCase() + Date.now().toString(16).substring(-6).toUpperCase();
 }
 
-export async function POST({ request }) {
+async function POST({ request }) {
   try {
     let { uid, name, groupId, isNewSticker } = await request.json();
 
@@ -67,3 +67,12 @@ export async function POST({ request }) {
     });
   }
 }
+
+const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null,
+  POST
+}, Symbol.toStringTag, { value: 'Module' }));
+
+const page = () => _page;
+
+export { page };

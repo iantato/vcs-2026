@@ -1,6 +1,6 @@
-import sql from '../../../db/index.js';
+import { s as sql } from './index_CZzODHOr.mjs';
 
-export async function GET({ params }) {
+async function GET({ params }) {
   try {
     const { name } = params;
 
@@ -50,3 +50,12 @@ export async function GET({ params }) {
     });
   }
 }
+
+const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null,
+  GET
+}, Symbol.toStringTag, { value: 'Module' }));
+
+const page = () => _page;
+
+export { page };
