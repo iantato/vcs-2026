@@ -11,7 +11,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "db:init": "node src/db/init.js",
-    "seed": "npm run db:init && node src/db/seed.js"
+    "seed": "npm run db:init && node src/db/seed.js",
+    "db:cleanup": "node src/db/cleanup.js"
   },
   "dependencies": {
     "@astrojs/vercel": "^10.0.4",

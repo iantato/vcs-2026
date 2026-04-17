@@ -55,9 +55,11 @@ try {
       <!-- UID Writing Instructions -->
       <div class="uid-instructions mc-panel" id="uid-instructions" style="display: none; margin-top: 2rem; border-color: var(--mc-accent); background: rgba(60, 133, 39, 0.1);">
         <h3 style="color: #55ff55; margin-top: 0;">✓ User Registered!</h3>
-        <p style="color: #c9d1d9; margin: 1rem 0;">Your NFC sticker needs to be written with this UID:</p>
-        <div style="background: #0d1117; padding: 1rem; border-radius: 4px; border: 1px solid #30363d; margin: 1rem 0; font-family: var(--font-minecraft-ten); font-size: 1.1rem; color: #55ff55; text-align: center; word-break: break-all;" id="uid-display"></div>
-        <p style="color: #8b949e; font-size: 0.9rem; margin: 1rem 0;">Use <strong>TagWriter by NXP</strong> or <strong>Nfc Tools</strong> to write this to your physical NFC sticker as a Text record with prefix "vcs_uid:"</p>
+        <p style="color: #c9d1d9; margin: 1rem 0;">Your NFC sticker profile URL:</p>
+        <div style="background: #0d1117; padding: 1rem; border-radius: 4px; border: 1px solid #30363d; margin: 1rem 0; font-family: var(--font-minecraft-ten); font-size: 0.9rem; color: #55ff55; text-align: center; word-break: break-all; overflow-wrap: break-word;" id="profile-url-display"></div>
+        <button class="mc-button" id="write-to-sticker-btn" style="margin-top: 1rem; width: 100%; background: rgba(60, 133, 39, 0.5);">Write to NFC Sticker</button>
+        <p style="color: #8b949e; font-size: 0.9rem; margin: 1rem 0;">Or manually write using <strong>TagWriter by NXP</strong> or <strong>Nfc Tools</strong></p>
+        <p style="color: #8b949e; font-size: 0.85rem; margin: 0;">UID: <span id="uid-display" style="color: #55ff55;"></span></p>
         <button class="mc-button" id="close-instructions" style="margin-top: 1rem; width: 100%; background: rgba(60, 133, 39, 0.2);">Continue Scanning</button>
       </div>
 
@@ -205,11 +207,20 @@ try {
           // Show UID writing instructions
           const uidInstructions = document.getElementById('uid-instructions');
           const uidDisplay = document.getElementById('uid-display');
+          const profileUrlDisplay = document.getElementById('profile-url-display');
+          
+          const profileUrl = `${window.location.origin}/profile/${encodeURIComponent(profileName)}`;
+          
           if (uidDisplay) {
             uidDisplay.innerText = result.generatedUID;
           }
+          if (profileUrlDisplay) {
+            profileUrlDisplay.innerText = profileUrl;
+          }
           if (uidInstructions) uidInstructions.style.display = 'block';
           currentNUID = result.generatedUID;
+          (window as any).currentProfileName = profileName;
+          (window as any).currentProfileUrl = profileUrl;
         } else {
           // Already written sticker or manual registration
           if (statusMsg) {
@@ -260,6 +271,57 @@ try {
     if (statusMsg) {
       statusMsg.innerText = 'Scanner Active! Tap your tag...';
       statusMsg.style.color = '#55ffff';
+    }
+  });
+
+  const writeToStickerBtn = document.getElementById('write-to-sticker-btn');
+  writeToStickerBtn?.addEventListener('click', async () => {
+    if (!('NDEFReader' in window)) {
+      if (statusMsg) statusMsg.innerText = "Error: Web NFC is not supported. Use Android Chrome.";
+      return;
+    }
+
+    try {
+      // @ts-ignore
+      const ndef = new NDEFWriter();
+      
+      const profileUrl = (window as any).currentProfileUrl || '';
+      const uid = currentNUID || '';
+
+      // Create records: URL + UID text
+      const records: any[] = [
+        { recordType: 'url', data: profileUrl },
+        { recordType: 'text', data: `vcs_uid:${uid}`, lang: 'en' }
+      ];
+
+      if (statusMsg) {
+        statusMsg.innerText = 'Ready to write... Tap NFC sticker';
+        statusMsg.style.color = '#ffaa00';
+      }
+
+      await ndef.write({ records });
+
+      if (statusMsg) {
+        statusMsg.innerText = '✓ Profile URL and UID written to sticker!';
+        statusMsg.style.color = '#55ff55';
+      }
+      
+      // Close instructions after success
+      setTimeout(() => {
+        const uidInstructions = document.getElementById('uid-instructions');
+        if (uidInstructions) uidInstructions.style.display = 'none';
+        if (observerImg) observerImg.className = 'observer-img success-glow';
+        if (statusMsg) {
+          statusMsg.innerText = 'Scanner Active! Tap your tag...';
+          statusMsg.style.color = '#55ffff';
+        }
+      }, 3000);
+    } catch (error: any) {
+      if (statusMsg) {
+        statusMsg.innerText = `Error writing to sticker: ${error.message}`;
+        statusMsg.style.color = '#ff5555';
+      }
+      if (observerImg) observerImg.className = 'observer-img error-pulse';
     }
   });
 </script>
