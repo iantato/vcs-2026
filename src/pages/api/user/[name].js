@@ -10,17 +10,19 @@ export async function GET({ params }) {
         a.name,
         g.name as group,
         g.emeralds as groupEmeralds,
-        a.days_attended as daysAttended,
+        COALESCE(COUNT(DISTINCT ar.attended_date), 0) as daysAttended,
         CASE
-          WHEN a.days_attended >= 5 THEN 'Netherite'
-          WHEN a.days_attended >= 4 THEN 'Diamond'
-          WHEN a.days_attended >= 3 THEN 'Gold'
-          WHEN a.days_attended >= 2 THEN 'Iron'
+          WHEN COALESCE(COUNT(DISTINCT ar.attended_date), 0) >= 5 THEN 'Netherite'
+          WHEN COALESCE(COUNT(DISTINCT ar.attended_date), 0) >= 4 THEN 'Diamond'
+          WHEN COALESCE(COUNT(DISTINCT ar.attended_date), 0) >= 3 THEN 'Gold'
+          WHEN COALESCE(COUNT(DISTINCT ar.attended_date), 0) >= 2 THEN 'Iron'
           ELSE 'Wood/Coal'
         END as rank
       FROM attendees a
       LEFT JOIN groups g ON a.group_id = g.id
+      LEFT JOIN attendance_records ar ON a.id = ar.attendee_id
       WHERE a.name = ${name}
+      GROUP BY a.id, a.name, g.id, g.name, g.emeralds
     `;
 
     if (user.length === 0) {

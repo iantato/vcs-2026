@@ -4,7 +4,7 @@ export async function POST({ request }) {
   try {
     const { uid } = await request.json();
 
-    // Initialize nfc_mappings table if needed
+    // Initialize tables if needed
     try {
       await sql`
         CREATE TABLE IF NOT EXISTS nfc_mappings (
@@ -14,8 +14,17 @@ export async function POST({ request }) {
           registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `;
+      await sql`
+        CREATE TABLE IF NOT EXISTS attendance_records (
+          id SERIAL PRIMARY KEY,
+          attendee_id INTEGER REFERENCES attendees(id) ON DELETE CASCADE,
+          attended_date DATE NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(attendee_id, attended_date)
+        )
+      `;
     } catch (e) {
-      // Table may already exist
+      // Tables may already exist
     }
 
     // Lookup NFC UID in database
@@ -37,15 +46,48 @@ export async function POST({ request }) {
       `;
     }
 
-    // Log attendance
-    const attendee = await sql`
-      UPDATE attendees
-      SET days_attended = days_attended + 1
-      WHERE id = ${mapping[0].attendee_id}
-      RETURNING id, name, days_attended
+    // Get today's date
+    const today = new Date().toISOString().split('T')[0];
+
+    // Check if already scanned today
+    const alreadyScanned = await sql`
+      SELECT id FROM attendance_records
+      WHERE attendee_id = ${mapping[0].attendee_id}
+      AND attended_date = ${today}
     `;
 
-    return new Response(JSON.stringify({ success: true, attendee: attendee[0] }), {
+    let daysAttended;
+    if (alreadyScanned.length === 0) {
+      // First scan today - log attendance
+      await sql`
+        INSERT INTO attendance_records (attendee_id, attended_date)
+        VALUES (${mapping[0].attendee_id}, ${today})
+      `;
+
+      // Get updated days_attended count (distinct dates)
+      const dayCount = await sql`
+        SELECT COUNT(DISTINCT attended_date) as days
+        FROM attendance_records
+        WHERE attendee_id = ${mapping[0].attendee_id}
+      `;
+      daysAttended = dayCount[0].days;
+    } else {
+      // Already scanned today - just get current count
+      const dayCount = await sql`
+        SELECT COUNT(DISTINCT attended_date) as days
+        FROM attendance_records
+        WHERE attendee_id = ${mapping[0].attendee_id}
+      `;
+      daysAttended = dayCount[0].days;
+    }
+
+    // Get attendee info
+    const attendee = await sql`
+      SELECT id, name FROM attendees
+      WHERE id = ${mapping[0].attendee_id}
+    `;
+
+    return new Response(JSON.stringify({ success: true, attendee: { ...attendee[0], days_attended: daysAttended } }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });

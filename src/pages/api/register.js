@@ -37,6 +37,16 @@ export async function POST({ request }) {
           registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `;
+
+      await sql`
+        CREATE TABLE IF NOT EXISTS attendance_records (
+          id SERIAL PRIMARY KEY,
+          attendee_id INTEGER REFERENCES attendees(id) ON DELETE CASCADE,
+          attended_date DATE NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(attendee_id, attended_date)
+        )
+      `;
     } catch (e) {
       // Tables may already exist
     }
@@ -61,8 +71,15 @@ export async function POST({ request }) {
     // Create new user
     const newUser = await sql`
       INSERT INTO attendees (name, group_id, days_attended)
-      VALUES (${name}, ${groupId}, 1)
+      VALUES (${name}, ${groupId}, 0)
       RETURNING id, name, group_id
+    `;
+
+    // Log first attendance today
+    const today = new Date().toISOString().split('T')[0];
+    await sql`
+      INSERT INTO attendance_records (attendee_id, attended_date)
+      VALUES (${newUser[0].id}, ${today})
     `;
 
     await sql`

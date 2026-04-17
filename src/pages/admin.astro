@@ -99,15 +99,15 @@ try {
         if (successAlert) successAlert.style.display = 'block';
         if (observerImg) observerImg.className = 'observer-img success-glow';
       } else if (response.status === 404) {
-        // Unknown NFC card
+        // Unknown NFC card - show friendly message
         currentNUID = uid;
         isRegistering = true;
         if (statusMsg) {
-          statusMsg.innerText = `Unknown Card UID: ${uid}`;
-          statusMsg.style.color = '#ff5555';
+          statusMsg.innerText = `New badge detected! Enter the child's name...`;
+          statusMsg.style.color = '#ffaa00';
         }
         if (newUserForm) newUserForm.style.display = 'block';
-        if (observerImg) observerImg.className = 'observer-img error-pulse';
+        if (observerImg) observerImg.className = 'observer-img scan-pulse';
         return;
       }
     } catch (error) {

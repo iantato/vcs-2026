@@ -69,6 +69,18 @@ async function initSchema() {
 
     console.log('✓ nfc_mappings table created');
 
+    // Create attendance_records table to track attendance by date
+    await sql`
+      CREATE TABLE IF NOT EXISTS attendance_records (
+        id SERIAL PRIMARY KEY,
+        attendee_id INTEGER REFERENCES attendees(id) ON DELETE CASCADE,
+        attended_date DATE NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(attendee_id, attended_date)
+      )
+    `;
+    console.log('✓ attendance_records table created');
+
     console.log('✅ Database schema initialized successfully!');
   } catch (error) {
     console.error('❌ Error initializing schema:', error);
