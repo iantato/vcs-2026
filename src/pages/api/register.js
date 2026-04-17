@@ -9,6 +9,38 @@ export async function POST({ request }) {
   try {
     let { uid, name, groupId, isNewSticker } = await request.json();
 
+    // Initialize tables if they don't exist
+    try {
+      await sql`
+        CREATE TABLE IF NOT EXISTS groups (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) UNIQUE NOT NULL,
+          emeralds INTEGER DEFAULT 0
+        )
+      `;
+
+      await sql`
+        CREATE TABLE IF NOT EXISTS attendees (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) UNIQUE NOT NULL,
+          group_id INTEGER REFERENCES groups(id),
+          days_attended INTEGER DEFAULT 0,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `;
+
+      await sql`
+        CREATE TABLE IF NOT EXISTS nfc_mappings (
+          uid VARCHAR(255) PRIMARY KEY,
+          attendee_id INTEGER REFERENCES attendees(id),
+          is_written BOOLEAN DEFAULT false,
+          registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `;
+    } catch (e) {
+      // Tables may already exist
+    }
+
     // Check if user already exists
     const existingUser = await sql`
       SELECT id FROM attendees WHERE name = ${name}
@@ -33,16 +65,6 @@ export async function POST({ request }) {
       RETURNING id, name, group_id
     `;
 
-    // Store NFC UID mapping
-    await sql`
-      CREATE TABLE IF NOT EXISTS nfc_mappings (
-        uid VARCHAR(255) PRIMARY KEY,
-        attendee_id INTEGER REFERENCES attendees(id),
-        is_written BOOLEAN DEFAULT false,
-        registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `;
-
     await sql`
       INSERT INTO nfc_mappings (uid, attendee_id, is_written)
       VALUES (${uid}, ${newUser[0].id}, ${!isNewSticker})
@@ -61,7 +83,7 @@ export async function POST({ request }) {
     });
   } catch (error) {
     console.error('Error registering user:', error);
-    return new Response(JSON.stringify({ error: 'Failed to register user' }), {
+    return new Response(JSON.stringify({ error: 'Failed to register user', details: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });

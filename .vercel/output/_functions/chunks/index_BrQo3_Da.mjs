@@ -13,4 +13,4 @@ const sql = neon(url, {
   arrayMode: false,
 });
 
-export default sql;
+export { sql as s };

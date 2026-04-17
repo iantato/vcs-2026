@@ -1,7 +1,30 @@
-import { s as sql } from './index_CZzODHOr.mjs';
+import { s as sql } from './index_BrQo3_Da.mjs';
 
 async function GET() {
   try {
+    // Initialize tables if they don't exist
+    try {
+      await sql`
+        CREATE TABLE IF NOT EXISTS groups (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) UNIQUE NOT NULL,
+          emeralds INTEGER DEFAULT 0
+        )
+      `;
+      
+      await sql`
+        CREATE TABLE IF NOT EXISTS attendees (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) UNIQUE NOT NULL,
+          group_id INTEGER REFERENCES groups(id),
+          days_attended INTEGER DEFAULT 0,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `;
+    } catch (e) {
+      // Tables may already exist, continue
+    }
+
     const attendees = await sql`
       SELECT
         a.id,
@@ -32,7 +55,7 @@ async function GET() {
     });
   } catch (error) {
     console.error('Error fetching attendees:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch data' }), {
+    return new Response(JSON.stringify({ error: 'Failed to fetch data', details: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });

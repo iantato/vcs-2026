@@ -1,7 +1,7 @@
-import { c as createComponent } from './_astro_assets_Cm4VkkMA.mjs';
+import { c as createComponent } from './_astro_assets_DTkjFF9c.mjs';
 import 'piccolore';
-import { r as renderComponent, b as renderTemplate, m as maybeRenderHead, c as addAttribute } from './entrypoint_DzPtys1S.mjs';
-import { $ as $$Layout } from './Layout_Csp2za1U.mjs';
+import { r as renderComponent, b as renderTemplate, m as maybeRenderHead, c as addAttribute } from './entrypoint_EHCFQqyt.mjs';
+import { $ as $$Layout } from './Layout_BOuFvl3-.mjs';
 
 const $$Profile = createComponent(($$result, $$props, $$slots) => {
   const user = {

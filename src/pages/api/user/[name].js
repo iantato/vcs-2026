@@ -44,7 +44,7 @@ export async function GET({ params }) {
     });
   } catch (error) {
     console.error('Error fetching user:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch user' }), {
+    return new Response(JSON.stringify({ error: 'Failed to fetch user', details: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });

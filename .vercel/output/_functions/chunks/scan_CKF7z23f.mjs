@@ -1,8 +1,22 @@
-import { s as sql } from './index_CZzODHOr.mjs';
+import { s as sql } from './index_BrQo3_Da.mjs';
 
 async function POST({ request }) {
   try {
     const { uid } = await request.json();
+
+    // Initialize nfc_mappings table if needed
+    try {
+      await sql`
+        CREATE TABLE IF NOT EXISTS nfc_mappings (
+          uid VARCHAR(255) PRIMARY KEY,
+          attendee_id INTEGER REFERENCES attendees(id),
+          is_written BOOLEAN DEFAULT false,
+          registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `;
+    } catch (e) {
+      // Table may already exist
+    }
 
     // Lookup NFC UID in database
     const mapping = await sql`
@@ -37,7 +51,7 @@ async function POST({ request }) {
     });
   } catch (error) {
     console.error('Error logging attendance:', error);
-    return new Response(JSON.stringify({ error: 'Failed to log attendance' }), {
+    return new Response(JSON.stringify({ error: 'Failed to log attendance', details: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
