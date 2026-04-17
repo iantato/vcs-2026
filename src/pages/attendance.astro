@@ -1,20 +1,44 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import sql from '../db/index.js';
 
-// Mock data for attendees
-const attendees = [
-  { name: 'SteveMiner', group: 'Diamond Diggers', days: 5, rank: 'Netherite' },
-  { name: 'AlexCraft', group: 'Ender Explorers', days: 4, rank: 'Diamond' },
-  { name: 'GodsBuilder', group: 'Redstone Engineers', days: 3, rank: 'Gold' },
-  { name: 'Notch_Fan', group: 'Diamond Diggers', days: 2, rank: 'Iron' },
-  { name: 'NewPlayer99', group: 'Ender Explorers', days: 1, rank: 'Wood/Coal' }
-];
+// Fetch live data from Neon
+let attendees = [];
+let groupEmeralds = [];
 
-const groupEmeralds = [
-  { group: 'Diamond Diggers', emeralds: 245 },
-  { group: 'Ender Explorers', emeralds: 180 },
-  { group: 'Redstone Engineers', emeralds: 156 }
-];
+try {
+  const attendeesData = await sql`
+    SELECT
+      a.id,
+      a.name,
+      g.name as group,
+      a.days_attended as days,
+      CASE
+        WHEN a.days_attended >= 5 THEN 'Netherite'
+        WHEN a.days_attended >= 4 THEN 'Diamond'
+        WHEN a.days_attended >= 3 THEN 'Gold'
+        WHEN a.days_attended >= 2 THEN 'Iron'
+        ELSE 'Wood/Coal'
+      END as rank
+    FROM attendees a
+    LEFT JOIN groups g ON a.group_id = g.id
+    ORDER BY a.days_attended DESC, a.name ASC
+  `;
+
+  const groupsData = await sql`
+    SELECT id, name as group, emeralds
+    FROM groups
+    ORDER BY emeralds DESC
+  `;
+
+  attendees = attendeesData;
+  groupEmeralds = groupsData;
+} catch (error) {
+  console.error('Error fetching data from Neon:', error);
+  // Fallback to empty arrays if database is not yet seeded
+  attendees = [];
+  groupEmeralds = [];
+}
 
 const ranks = {
   'Netherite': { color: '#443A4B', img: 'https://minecraft.wiki/images/Netherite_Ingot_JE1.png' },
@@ -45,20 +69,26 @@ const ranks = {
             </tr>
           </thead>
           <tbody>
-            {groupEmeralds.map((grp, index) => (
+            {attendees.length > 0 ? attendees.map((grp, index) => (
               <tr>
                 <td data-label="Rank" style="text-align: center; font-family: var(--font-minecraft-ten); color: #8b949e; font-size: 1.2rem;">
                   {index + 1}
                 </td>
                 <td data-label="Group" style="text-align: center;">
-                  <span class="group-label">{grp.group}</span>
+                  <span class="group-label">{grp.group || 'Unassigned'}</span>
                 </td>
                 <td data-label="Total Emeralds" style="text-align: center; font-family: var(--font-minecraft-ten); color: #55FF55; font-size: 1.2rem;">
-                  {grp.emeralds}
+                  {grp.emeralds || 0}
                   <img src="https://minecraft.wiki/images/Emerald_JE3_BE3.png" alt="Emerald" width="20" style="vertical-align: middle; margin-left: 8px; image-rendering: pixelated;" onerror="this.src='/favicon.svg'"/>
                 </td>
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td colspan="3" style="text-align: center; padding: 2rem; color: #8b949e;">
+                  No groups registered yet. Set up your database!
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -79,7 +109,7 @@ const ranks = {
             </tr>
           </thead>
           <tbody>
-            {attendees.map((user, index) => (
+            {attendees.length > 0 ? attendees.map((user, index) => (
               <tr>
                 <td data-label="#" style="text-align: center; font-family: var(--font-minecraft-ten); color: #8b949e; font-size: 1.2rem;">
                   {index + 1}
@@ -91,7 +121,7 @@ const ranks = {
                   </div>
                 </td>
                 <td data-label="Group" style="text-align: center;">
-                  <span class="group-label">{user.group}</span>
+                  <span class="group-label">{user.group || 'Unassigned'}</span>
                 </td>
                 <td data-label="Score (Days)" style="text-align: center;">
                   <span class="score-label">{user.days}</span>
@@ -103,7 +133,13 @@ const ranks = {
                   </div>
                 </td>
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 2rem; color: #8b949e;">
+                  No attendees registered yet. Scan an NFC tag to get started!
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
