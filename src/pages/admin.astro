@@ -76,6 +76,7 @@ try {
 <script>
   let currentNUID = '';
   let isRegistering = false;
+  let isWriting = false;
 
   const scanBtn = document.getElementById('simulate-scan');
   const statusMsg = document.getElementById('status-message');
@@ -156,6 +157,7 @@ try {
       }
 
       ndef.addEventListener("readingerror", () => {
+        if (isWriting || isRegistering) return;
         if (statusMsg) {
           statusMsg.innerText = "Could not read tag. Try again!";
           statusMsg.style.color = '#ff5555';
@@ -163,6 +165,7 @@ try {
       });
 
       ndef.addEventListener("reading", ({ serialNumber }: any) => {
+        if (isWriting || isRegistering) return;
         if (observerImg) observerImg.className = 'observer-img';
         const uid = serialNumber || 'UNKNOWN';
         logAttendance(uid);
