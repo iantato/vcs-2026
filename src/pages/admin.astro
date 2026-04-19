@@ -28,6 +28,7 @@ try {
       <p class="status-msg" id="status-message">Waiting for NFC scan...</p>
 
       <button class="mc-button scan-btn" id="simulate-scan">START SCANNER</button>
+      <button class="mc-button" id="test-write-btn" style="margin-top: 1rem; width: 100%; background: rgba(150, 120, 60, 0.6); font-size: 0.9rem; border-color: #aa5500;">🛠️ Test NFC Write (Debug)</button>
 
       <!-- Modal for new user prompt -->
       <div class="new-user-form mc-panel" id="new-user-form" style="display: none; margin-top: 2rem; width: 100%;">
@@ -319,12 +320,12 @@ try {
       await writer.write({ records });
 
       console.log('✓ Successfully wrote to NFC tag');
-      
+
       if (statusMsg) {
         statusMsg.innerText = '✓ Profile URL written to sticker!';
         statusMsg.style.color = '#55ff55';
       }
-      
+
       // Close instructions after success
       setTimeout(() => {
         const uidInstructions = document.getElementById('uid-instructions');
@@ -339,16 +340,16 @@ try {
       console.error('NFC Write Error:', error);
       console.error('Error name:', error.name);
       console.error('Error message:', error.message);
-      
+
       if (statusMsg) {
-        const errorMsg = error.name === 'NotAllowedError' 
+        const errorMsg = error.name === 'NotAllowedError'
           ? 'NFC write cancelled or tag removed. Try again.'
           : error.name === 'NotSupportedError'
           ? 'Tag type not supported for writing.'
           : error.name === 'InvalidStateError'
           ? 'NFC transaction aborted. Ensure tag is in range.'
           : `Error: ${error.message}`;
-        
+
         statusMsg.innerText = errorMsg;
         statusMsg.style.color = '#ff5555';
       }
@@ -385,16 +386,16 @@ try {
       await writer.write({ records });
 
       console.log('✓ Test write succeeded!');
-      
+
       if (statusMsg) {
         statusMsg.innerText = '✓ Test write successful! Tag is writable.';
         statusMsg.style.color = '#55ff55';
       }
     } catch (error: any) {
       console.error('Test write failed:', error);
-      
+
       if (statusMsg) {
-        const errorMsg = error.name === 'NotAllowedError' 
+        const errorMsg = error.name === 'NotAllowedError'
           ? '❌ Cancelled. Hold tag in range longer!'
           : error.name === 'NotSupportedError'
           ? '❌ Tag type not supported for writing'
@@ -403,7 +404,7 @@ try {
           : error.name === 'SecurityError'
           ? '❌ Permission denied. Enable NFC permissions.'
           : `❌ ${error.message}`;
-        
+
         statusMsg.innerText = errorMsg;
         statusMsg.style.color = '#ff5555';
       }
