@@ -99,9 +99,34 @@ try {
 
       if (response.ok) {
         if (statusMsg) {
-          statusMsg.innerText = `✓ ${result.attendee.name} - Day ${result.attendee.days_attended}`;
+          statusMsg.innerText = `✓ ${result.attendee.name} - Day ${result.attendee.days_attended}. Writing URL...`;
           statusMsg.style.color = '#55ff55';
         }
+        
+        // Write the profile URL directly to the tag if possible!
+        if ('NDEFReader' in window) {
+          try {
+            isWriting = true;
+            // @ts-ignore
+            const writer = new NDEFReader();
+            const profileUrl = `https://vcs-2026.vercel.app/profile/${encodeURIComponent(result.attendee.name)}`;
+            await writer.write({
+              records: [
+                { recordType: 'url', data: profileUrl },
+                { recordType: 'text', lang: 'en', data: `vcs_uid:${uid}` }
+              ]
+            });
+            console.log('Successfully wrote profile URL to tag during attendance scan!');
+            if (statusMsg) statusMsg.innerText += ' (Tag Updated ✓)';
+          } catch (writeErr) {
+            console.error('Could not write to tag during attendance:', writeErr);
+            // Non-fatal, they might have pulled the tag away too fast
+          } finally {
+            // Cool down
+            setTimeout(() => { isWriting = false; }, 2000);
+          }
+        }
+        
         if (successAlert) successAlert.style.display = 'block';
         if (observerImg) observerImg.className = 'observer-img success-glow';
       } else if (response.status === 404) {
