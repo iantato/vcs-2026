@@ -10,9 +10,9 @@ export async function GET() {
     await sql`DELETE FROM badges`;
     await sql`DELETE FROM groups`;
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      message: 'All tables wiped clean' 
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'All tables wiped clean'
     }), {
       status: 200,
       headers: {
@@ -20,9 +20,9 @@ export async function GET() {
       }
     });
   } catch (error) {
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: error.message 
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message
     }), {
       status: 500,
       headers: {
