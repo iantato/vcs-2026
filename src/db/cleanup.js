@@ -5,17 +5,14 @@ async function cleanupAttendance() {
   try {
     console.log('🧹 Clearing attendance records...');
 
-    // Delete all attendance records
-    await sql`
-      DELETE FROM attendance_records
-    `;
-    console.log('✓ All attendance records deleted');
-
-    // Optional: Reset days_attended in attendees table
-    await sql`
-      UPDATE attendees SET days_attended = 0
-    `;
-    console.log('✓ Reset all attendance counts');
+    // Delete all data
+    await sql`DELETE FROM attendee_badges`;
+    await sql`DELETE FROM attendance_records`;
+    await sql`DELETE FROM nfc_mappings`;
+    await sql`DELETE FROM attendees`;
+    await sql`DELETE FROM badges`;
+    await sql`DELETE FROM groups`;
+    console.log('✓ All tables wiped clean');
 
     console.log('✅ Cleanup complete!');
   } catch (error) {
