@@ -14,6 +14,7 @@ try {
       a.id,
       a.name,
       g.name as group,
+      COALESCE(a.emeralds, 0) as emeralds,
       COALESCE(COUNT(DISTINCT ar.attended_date), 0) as days,
       CASE
         WHEN COALESCE(COUNT(DISTINCT ar.attended_date), 0) >= 5 THEN 'Netherite'
@@ -25,14 +26,19 @@ try {
     FROM attendees a
     LEFT JOIN groups g ON a.group_id = g.id
     LEFT JOIN attendance_records ar ON a.id = ar.attendee_id
-    GROUP BY a.id, a.name, g.name
-    ORDER BY days DESC, a.name ASC
+    GROUP BY a.id, a.name, g.name, a.emeralds
+    ORDER BY emeralds DESC, days DESC, a.name ASC
   `;
 
   const groupsData = await sql`
-    SELECT id, name as group, emeralds
-    FROM groups
-    ORDER BY emeralds DESC
+    SELECT
+      g.id,
+      g.name as group,
+      COALESCE(SUM(a.emeralds), 0) as emeralds
+    FROM groups g
+    LEFT JOIN attendees a ON g.id = a.group_id
+    GROUP BY g.id, g.name
+    ORDER BY emeralds DESC, g.name ASC
   `;
 
   attendees = attendeesData;
@@ -56,8 +62,8 @@ const ranks = {
 <Layout title="Attendance List">
   <div class="attendance-container">
     <div class="header-content">
-      <h1 class="glow-title">Attendance Rankings</h1>
-      <p>5 Days of Wisdom - The more you attend, the higher your tier!</p>
+      <h1 class="glow-title">Live Rankings</h1>
+      <p>5 Days of Wisdom - Can your group collect the most emeralds?</p>
     </div>
 
     <!-- Group Emeralds Leaderboard -->
@@ -100,7 +106,7 @@ const ranks = {
 
     <!-- Individual Attendance Leaderboard -->
     <div class="mc-panel" style="padding: 0; overflow: hidden; background: #0d1117;">
-      <h2 style="padding: 1rem 1rem 0 1rem; margin: 0; color: #f0f6fc;">Individual Attendance</h2>
+      <h2 style="padding: 1rem 1rem 0 1rem; margin: 0; color: #f0f6fc;">Individual Rankings</h2>
       <div class="table-responsive">
         <table class="mc-table">
           <thead>
@@ -108,6 +114,7 @@ const ranks = {
               <th style="width: 60px; text-align: center;">#</th>
               <th style="text-align: left;">Profile</th>
               <th style="text-align: center;">Group</th>
+              <th style="text-align: center;">Emeralds</th>
               <th style="text-align: center;">Score (Days)</th>
               <th style="text-align: center;">Tier</th>
             </tr>
@@ -126,6 +133,10 @@ const ranks = {
                 </td>
                 <td data-label="Group" style="text-align: center;">
                   <span class="group-label">{user.group || 'Unassigned'}</span>
+                </td>
+                <td data-label="Emeralds" style="text-align: center; font-family: var(--font-minecraft-ten); color: #55FF55; font-size: 1.2rem;">
+                  {user.emeralds || 0}
+                  <img src="https://minecraft.wiki/images/Emerald_JE3_BE3.png" alt="Emerald" width="20" style="vertical-align: middle; margin-left: 4px; image-rendering: pixelated;" onerror="this.src='/favicon.svg'"/>
                 </td>
                 <td data-label="Score (Days)" style="text-align: center;">
                   <span class="score-label">{user.days}</span>

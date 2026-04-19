@@ -22,6 +22,7 @@ async function initSchema() {
         name VARCHAR(255) UNIQUE NOT NULL,
         group_id INTEGER REFERENCES groups(id),
         days_attended INTEGER DEFAULT 0,
+        emeralds INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `;
@@ -48,6 +49,11 @@ async function initSchema() {
     `;
     console.log('✓ attendee_badges table created');
 
+    // Add emeralds column to attendees if it doesn't exist
+    try {
+      await sql`ALTER TABLE attendees ADD COLUMN emeralds INTEGER DEFAULT 0`;
+    } catch(e) {}
+    
     // Create the nfc_mappings table
     await sql`
       CREATE TABLE IF NOT EXISTS nfc_mappings (
