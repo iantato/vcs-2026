@@ -1,4 +1,6 @@
 ---
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
 import Layout from '../../layouts/Layout.astro';
 import sql from '../../db/index.js';
 
