@@ -53,7 +53,7 @@ async function initSchema() {
     try {
       await sql`ALTER TABLE attendees ADD COLUMN emeralds INTEGER DEFAULT 0`;
     } catch(e) {}
-    
+
     // Create the nfc_mappings table
     await sql`
       CREATE TABLE IF NOT EXISTS nfc_mappings (
