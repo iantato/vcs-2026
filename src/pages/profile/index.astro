@@ -5,15 +5,15 @@ import Layout from '../../layouts/Layout.astro';
 <Layout title="Search Profile">
   <div class="profile-container" style="max-width: 500px; margin: 2rem auto; text-align: center;">
     <h1 style="color: #f0f6fc; font-family: var(--font-minecraft-ten); margin-bottom: 2rem;">Find Profile</h1>
-    
+
     <div class="mc-panel" style="padding: 2rem;">
       <p style="color: #8b949e; margin-bottom: 1.5rem;">Enter your name to view your profile and attendance records.</p>
-      
+
       <form onsubmit="event.preventDefault(); window.location.href='/profile/' + document.getElementById('username').value;">
-        <input 
-          type="text" 
-          id="username" 
-          class="mc-input" 
+        <input
+          type="text"
+          id="username"
+          class="mc-input"
           placeholder="BlockBreaker99"
           style="margin-bottom: 1rem; text-align: center;"
           required

@@ -31,8 +31,8 @@ try {
 
   if (users.length > 0) {
     user = users[0];
-    
-    // Add Rank color 
+
+    // Add Rank color
     const rankColors: Record<string, string> = {
       'Netherite': '#443A4B',
       'Diamond': '#55FFFF',
@@ -41,12 +41,16 @@ try {
       'Wood/Coal': '#555555'
     };
     user.rankColor = rankColors[user.rank] || '#555555';
-    
-    // Fake badges for now, or fetch from badges table if implemented
-    user.badges = [
-      { title: "First Day!", icon: "https://minecraft.wiki/images/Crafting_Table_%28item%29_JE4_BE3.png" },
-      { title: "Growing Strong", icon: "https://minecraft.wiki/images/Golden_Apple_JE2_BE2.png" }
-    ];
+
+    // Fetch earned badges from the database
+    const badgesData = await sql`
+      SELECT b.title, b.icon_url as icon
+      FROM badges b
+      JOIN attendee_badges ab ON b.id = ab.badge_id
+      WHERE ab.attendee_id = ${user.id}
+      ORDER BY ab.awarded_at DESC
+    `;
+    user.badges = badgesData;
   } else {
     // If not found, perhaps redirect to 404 or show error
     return Astro.redirect('/404');
@@ -107,14 +111,18 @@ if (!user) {
       <div class="mc-panel badges-panel">
         <h2 style="border-bottom: 2px solid #30363d; padding-bottom: 0.5rem; color: #f0f6fc;">Achievements</h2>
         <div class="badges-grid">
-          {user.badges.map(badge => (
-            <div class="badge-item">
-              <div class="badge-icon-box">
-                <img src={badge.icon} alt={badge.title} width="40" height="40" style="image-rendering: pixelated;" onerror="this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='"/>
+          {user.badges && user.badges.length > 0 ? (
+            user.badges.map(badge => (
+              <div class="badge-item">
+                <div class="badge-icon-box">
+                  <img src={badge.icon} alt={badge.title} width="40" height="40" style="image-rendering: pixelated;" onerror="this.src='/favicon.svg'"/>
+                </div>
+                <p class="badge-title">{badge.title}</p>
               </div>
-              <p class="badge-title">{badge.title}</p>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p style="color: #8b949e; text-align: center; width: 100%; grid-column: 1 / -1; padding: 1rem 0;">No achievements earned yet.</p>
+          )}
         </div>
       </div>
     </div>

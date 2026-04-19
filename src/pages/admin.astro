@@ -102,7 +102,7 @@ try {
           statusMsg.innerText = `✓ ${result.attendee.name} - Day ${result.attendee.days_attended}. Writing URL...`;
           statusMsg.style.color = '#55ff55';
         }
-        
+
         // Write the profile URL directly to the tag if possible!
         if ('NDEFReader' in window) {
           try {
@@ -126,7 +126,7 @@ try {
             setTimeout(() => { isWriting = false; }, 2000);
           }
         }
-        
+
         if (successAlert) successAlert.style.display = 'block';
         if (observerImg) observerImg.className = 'observer-img success-glow';
       } else if (response.status === 404) {
