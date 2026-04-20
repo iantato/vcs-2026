@@ -25,9 +25,13 @@ export async function POST({ request }) {
           name VARCHAR(255) UNIQUE NOT NULL,
           group_id INTEGER REFERENCES groups(id),
           days_attended INTEGER DEFAULT 0,
+          emeralds INTEGER DEFAULT 0,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `;
+
+      // Safely ensure emeralds column exists for legacy production databases
+      try { await sql`ALTER TABLE attendees ADD COLUMN IF NOT EXISTS emeralds INTEGER DEFAULT 0`; } catch (e) {}
 
       await sql`
         CREATE TABLE IF NOT EXISTS nfc_mappings (

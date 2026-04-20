@@ -9,6 +9,9 @@ let attendees = [];
 let groupEmeralds = [];
 
 try {
+  // Silent migration guard for production databases to ensure column exists
+  try { await sql`ALTER TABLE attendees ADD COLUMN IF NOT EXISTS emeralds INTEGER DEFAULT 0`; } catch (e) {}
+
   const attendeesData = await sql`
     SELECT
       a.id,
