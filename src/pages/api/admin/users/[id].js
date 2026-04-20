@@ -4,7 +4,7 @@ export async function PUT({ params, request }) {
   try {
     const { id } = params;
     const body = await request.json();
-    let { name, group_id, emeralds, is_teacher, avatar_url } = body;
+    let { name, group_id, emeralds, is_teacher, avatar_url, attendance_days } = body;
 
     // Ensure column exists for is_teacher
     try { await sql`ALTER TABLE attendees ADD COLUMN IF NOT EXISTS is_teacher BOOLEAN DEFAULT false`; } catch (e) {}
@@ -26,6 +26,15 @@ export async function PUT({ params, request }) {
         avatar_url = ${avatar_url || null}
       WHERE id = ${id}
     `;
+
+    if (Array.isArray(attendance_days)) {
+      await sql`DELETE FROM attendance_records WHERE attendee_id = ${id}`;
+      for (const d of attendance_days) {
+        try {
+          await sql`INSERT INTO attendance_records (attendee_id, attended_date) VALUES (${id}, ${d}) ON CONFLICT DO NOTHING`;
+        } catch (e) {}
+      }
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
