@@ -34,7 +34,7 @@ export async function DELETE({ params }) {
 
     // Remove users from this group first to satisfy foreign key constraint unless using ON DELETE SET NULL
     await sql`UPDATE attendees SET group_id = NULL WHERE group_id = ${id}`;
-    
+
     // Now delete the group
     await sql`DELETE FROM groups WHERE id = ${id}`;
 

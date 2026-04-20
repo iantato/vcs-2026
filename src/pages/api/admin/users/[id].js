@@ -8,7 +8,7 @@ export async function PUT({ params, request }) {
 
     // Ensure column exists for is_teacher
     try { await sql`ALTER TABLE attendees ADD COLUMN IF NOT EXISTS is_teacher BOOLEAN DEFAULT false`; } catch (e) {}
-    try { await sql`ALTER TABLE attendees ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(1000)`; } catch (e) {}
+    try { await sql`ALTER TABLE attendees ADD COLUMN IF NOT EXISTS avatar_url TEXT`; } catch (e) {}
 
     if (is_teacher) {
       group_id = null;
