@@ -52,7 +52,6 @@ try {
       <p class="status-msg" id="status-message">Waiting for NFC scan...</p>
 
       <button class="mc-button scan-btn" id="simulate-scan">START SCANNER</button>
-      <button class="mc-button" id="test-write-btn" style="margin-top: 1rem; width: 100%; background: rgba(150, 120, 60, 0.6); font-size: 0.9rem; border-color: #aa5500;">🛠️ Test NFC Write (Debug)</button>
 
       <!-- Modal for new user prompt -->
       <div class="new-user-form mc-panel" id="new-user-form" style="display: none; margin-top: 2rem; width: 100%;">
@@ -98,7 +97,7 @@ try {
         <div style="background: #0d1117; padding: 1rem; border-radius: 4px; border: 1px solid #30363d; margin: 1rem 0; font-family: var(--font-minecraft-ten); font-size: 0.9rem; color: #55ff55; text-align: center; word-break: break-all; overflow-wrap: break-word;" id="profile-url-display"></div>
         <button class="mc-button" id="write-to-sticker-btn" style="margin-top: 1rem; width: 100%; background: rgba(60, 133, 39, 0.5);">Write to NFC Sticker</button>
         <p style="color: #ffaa00; font-size: 0.85rem; margin: 0.5rem 0;"><strong>⚠ Keep tag in range for entire write!</strong></p>
-        <button class="mc-button" id="test-write-btn" style="margin-top: 0.5rem; width: 100%; background: rgba(150, 120, 60, 0.4); font-size: 0.9rem;">Test NFC (Write "TEST")</button>
+
         <p style="color: #8b949e; font-size: 0.9rem; margin: 1rem 0;">Or manually write using <strong>TagWriter by NXP</strong> or <strong>Nfc Tools</strong></p>
         <p style="color: #8b949e; font-size: 0.85rem; margin: 0;">UID: <span id="uid-display" style="color: #55ff55;"></span></p>
         <button class="mc-button" id="close-instructions" style="margin-top: 1rem; width: 100%; background: rgba(60, 133, 39, 0.2);">Continue Scanning</button>
@@ -530,66 +529,6 @@ try {
     }
   });
 
-  // Test NFC Write - Simple debug function
-  const testWriteBtn = document.getElementById('test-write-btn');
-  testWriteBtn?.addEventListener('click', async () => {
-    isWriting = true;
-    if (!('NDEFReader' in window)) {
-      if (statusMsg) statusMsg.innerText = "Error: Web NFC not supported. Use Android Chrome.";
-      isWriting = false;
-      return;
-    }
-
-    try {
-      if (statusMsg) {
-        statusMsg.innerText = 'Test: Hold tag in range NOW...';
-        statusMsg.style.color = '#ffaa00';
-      }
-
-      const records = [
-        {
-          recordType: 'text',
-          lang: 'en',
-          data: 'TEST_VCS_2026'
-        }
-      ];
-
-      console.log('Test write - records:', records);
-
-      // @ts-ignore
-      const writer = new NDEFReader();
-      await writer.write({ records });
-
-      console.log('✓ Test write succeeded!');
-
-      if (statusMsg) {
-        statusMsg.innerText = '✓ Test write successful! Tag is writable.';
-        statusMsg.style.color = '#55ff55';
-      }
-
-      setTimeout(() => {
-        isWriting = false;
-      }, 3000);
-    } catch (error: any) {
-      console.error('Test write failed:', error);
-
-      if (statusMsg) {
-        const errorMsg = error.name === 'NotAllowedError'
-          ? '❌ Cancelled. Hold tag in range longer!'
-          : error.name === 'NotSupportedError'
-          ? '❌ Tag type not supported for writing'
-          : error.name === 'InvalidStateError'
-          ? '❌ Tag removed. Try again.'
-          : error.name === 'SecurityError'
-          ? '❌ Permission denied. Enable NFC permissions.'
-          : `❌ ${error.message}`;
-
-        statusMsg.innerText = errorMsg;
-        statusMsg.style.color = '#ff5555';
-      }
-      isWriting = false;
-    }
-  });
 </script>
 
 <style>
