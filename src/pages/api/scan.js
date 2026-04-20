@@ -46,8 +46,9 @@ export async function POST({ request }) {
       `;
     }
 
-    // Get today's date
-    const today = new Date().toISOString().split('T')[0];
+    // Get today's date in GMT+8
+    const gmt8Date = new Date(Date.now() + 8 * 60 * 60 * 1000);
+    const today = gmt8Date.toISOString().split('T')[0];
 
     // Check if already scanned today
     const alreadyScanned = await sql`
