@@ -4,20 +4,43 @@ import sql from '../../db/index.js';
 
 // Fetch available groups for dropdown
 let availableGroups = [];
+let teachers = [];
 try {
+  try { await sql`ALTER TABLE attendees ADD COLUMN IF NOT EXISTS is_teacher BOOLEAN DEFAULT false`; } catch(e) {}
+  
   const groupsData = await sql`
     SELECT id, name FROM groups ORDER BY name ASC
   `;
   availableGroups = groupsData;
+
+  const teachersData = await sql`
+    SELECT
+      a.id,
+      a.name,
+      g.name as group,
+      COALESCE(a.emeralds, 0) as emeralds,
+      COALESCE(COUNT(DISTINCT ar.attended_date), 0) as days
+    FROM attendees a
+    LEFT JOIN groups g ON a.group_id = g.id
+    LEFT JOIN attendance_records ar ON a.id = ar.attendee_id
+    WHERE a.is_teacher = true
+    GROUP BY a.id, a.name, g.name, a.emeralds
+    ORDER BY emeralds DESC, days DESC, a.name ASC
+  `;
+  teachers = teachersData;
 } catch (error) {
-  console.error('Error fetching groups:', error);
+  console.error('Error fetching data:', error);
   availableGroups = [];
+  teachers = [];
 }
 ---
 
 <Layout title="Admin Scanner">
   <div class="admin-container">
-    <h1 class="glow-title">Admin NFC Portal</h1>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <h1 class="glow-title" style="margin-bottom: 0;">Admin NFC Portal</h1>
+      <a href="/admin/dashboard" class="mc-button" style="background: rgba(31, 111, 235, 0.4); text-decoration: none; padding: 0.5rem 1rem;">Admin Dashboard</a>
+    </div>
 
     <div class="scanner-ui">
 <!-- Minecraft Observer Face via Actual Texture -->
@@ -82,6 +105,42 @@ try {
 
       <div class="success-alert mc-panel" id="success-alert" style="display: none; margin-top: 2rem; border-color: var(--mc-accent); background: rgba(35, 134, 54, 0.1);">
         <h3 style="color: #55ff55; margin:0;">Attendance Logged!</h3>
+      </div>
+    </div>
+
+    <!-- Teacher Leaderboard -->
+    <div style="margin-top: 3rem; margin-bottom: 2rem; text-align: left;">
+      <h2 style="color: #ffb86c; font-family: var(--font-minecraft-ten); text-align: center; margin-bottom: 1rem;">Teacher Roster</h2>
+      <div class="mc-panel" style="padding: 0; overflow: hidden; background: #0d1117;">
+        <table class="mc-table" style="width: 100%; border-collapse: collapse; color: var(--mc-text);">
+          <thead>
+            <tr>
+              <th style="padding: 1rem; text-align: left; background: #161b22; border-bottom: 1px solid #30363d; color: #8b949e;">Teacher</th>
+              <th style="padding: 1rem; text-align: center; background: #161b22; border-bottom: 1px solid #30363d; color: #8b949e;">Group</th>
+            </tr>
+          </thead>
+          <tbody>
+            {teachers.length > 0 ? teachers.map((usr) => (
+              <tr style="border-bottom: 1px solid rgba(48, 54, 61, 0.5);">
+                <td style="padding: 1rem;">
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <img src={`https://minotar.net/avatar/${usr.name}/32.png`} alt={`${usr.name}'s Head`} style="width: 32px; height: 32px; image-rendering: pixelated; border-radius: 4px; border: 1px solid #30363d;" onerror="this.src='/favicon.svg'"/>
+                    <span style="font-weight: bold; color: #ffb86c;">{usr.name}</span>
+                  </div>
+                </td>
+                <td style="padding: 1rem; text-align: center;">
+                  <span style="background-color: rgba(255, 255, 255, 0.05); padding: 4px 8px; border-radius: 4px; font-size: 0.9rem; color: #8b949e;">{usr.group || 'Unassigned'}</span>
+                </td>
+              </tr>
+            )) : (
+              <tr>
+                <td colspan="2" style="text-align: center; padding: 2rem; color: #8b949e;">
+                  No teachers have been set yet. Manage them on the <a href="/admin/dashboard" style="color: #58a6ff; text-decoration: underline;">Admin Dashboard</a>.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

@@ -6,11 +6,13 @@ import sql from '../db/index.js';
 
 // Fetch live data from Neon
 let attendees = [];
+let teachers = [];
 let groupEmeralds = [];
 
 try {
-  // Silent migration guard for production databases to ensure column exists
+// Silent migration guard for production databases to ensure column exists
   try { await sql`ALTER TABLE attendees ADD COLUMN IF NOT EXISTS emeralds INTEGER DEFAULT 0`; } catch (e) {}
+  try { await sql`ALTER TABLE attendees ADD COLUMN IF NOT EXISTS is_teacher BOOLEAN DEFAULT false`; } catch (e) {}
 
   const attendeesData = await sql`
     SELECT
@@ -19,6 +21,7 @@ try {
       g.name as group,
       COALESCE(a.emeralds, 0) as emeralds,
       COALESCE(COUNT(DISTINCT ar.attended_date), 0) as days,
+      a.is_teacher,
       CASE
         WHEN COALESCE(COUNT(DISTINCT ar.attended_date), 0) >= 5 THEN 'Netherite'
         WHEN COALESCE(COUNT(DISTINCT ar.attended_date), 0) >= 4 THEN 'Diamond'
@@ -29,6 +32,22 @@ try {
     FROM attendees a
     LEFT JOIN groups g ON a.group_id = g.id
     LEFT JOIN attendance_records ar ON a.id = ar.attendee_id
+    WHERE a.is_teacher = false OR a.is_teacher IS NULL
+    GROUP BY a.id, a.name, g.name, a.emeralds, a.is_teacher
+    ORDER BY emeralds DESC, days DESC, a.name ASC
+  `;
+
+  const teachersData = await sql`
+    SELECT
+      a.id,
+      a.name,
+      g.name as group,
+      COALESCE(a.emeralds, 0) as emeralds,
+      COALESCE(COUNT(DISTINCT ar.attended_date), 0) as days
+    FROM attendees a
+    LEFT JOIN groups g ON a.group_id = g.id
+    LEFT JOIN attendance_records ar ON a.id = ar.attendee_id
+    WHERE a.is_teacher = true
     GROUP BY a.id, a.name, g.name, a.emeralds
     ORDER BY emeralds DESC, days DESC, a.name ASC
   `;
@@ -45,11 +64,13 @@ try {
   `;
 
   attendees = attendeesData;
+  teachers = teachersData;
   groupEmeralds = groupsData;
 } catch (error) {
   console.error('Error fetching data from Neon:', error);
   // Fallback to empty arrays if database is not yet seeded
   attendees = [];
+  teachers = [];
   groupEmeralds = [];
 }
 
@@ -108,7 +129,7 @@ const ranks = {
     </div>
 
     <!-- Individual Attendance Leaderboard -->
-    <div class="mc-panel" style="padding: 0; overflow: hidden; background: #0d1117;">
+    <div class="mc-panel" style="padding: 0; overflow: hidden; background: #0d1117; margin-bottom: 2rem;">
       <h2 style="padding: 1rem 1rem 0 1rem; margin: 0; color: #f0f6fc;">Individual Rankings</h2>
       <div class="table-responsive">
         <table class="mc-table">
@@ -155,6 +176,55 @@ const ranks = {
               <tr>
                 <td colspan="5" style="text-align: center; padding: 2rem; color: #8b949e;">
                   No attendees registered yet. Scan an NFC tag to get started!
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Teacher Leaderboard -->
+    <div class="mc-panel" style="padding: 0; overflow: hidden; background: #0d1117;">
+      <h2 style="padding: 1rem 1rem 0 1rem; margin: 0; color: #ffb86c;">Teacher Leaderboard</h2>
+      <div class="table-responsive">
+        <table class="mc-table">
+          <thead>
+            <tr>
+              <th style="width: 60px; text-align: center;">#</th>
+              <th style="text-align: left;">Teacher</th>
+              <th style="text-align: center;">Group</th>
+              <th style="text-align: center;">Emeralds</th>
+              <th style="text-align: center;">Attendance (Days)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {teachers.length > 0 ? teachers.map((user, index) => (
+              <tr>
+                <td data-label="#" style="text-align: center; font-family: var(--font-minecraft-ten); color: #8b949e; font-size: 1.2rem;">
+                  {index + 1}
+                </td>
+                <td data-label="Teacher" style="text-align: left;">
+                  <div class="user-cell">
+                    <img src={`https://minotar.net/avatar/${user.name}/32.png`} alt={`${user.name}'s Head`} class="avatar-head" onerror="this.src='/favicon.svg'"/>
+                    <span class="user-name" style="color: #ffb86c;">{user.name}</span>
+                  </div>
+                </td>
+                <td data-label="Group" style="text-align: center;">
+                  <span class="group-label">{user.group || 'Unassigned'}</span> 
+                </td>
+                <td data-label="Emeralds" style="text-align: center; font-family: var(--font-minecraft-ten); color: #55FF55; font-size: 1.2rem;">
+                  {user.emeralds || 0}
+                  <img src="https://minecraft.wiki/images/Emerald_JE3_BE3.png" alt="Emerald" width="20" style="vertical-align: middle; margin-left: 4px; image-rendering: pixelated;" onerror="this.src='/favicon.svg'"/>
+                </td>
+                <td data-label="Attendance (Days)" style="text-align: center;">      
+                  <span class="score-label">{user.days}</span>
+                </td>
+              </tr>
+            )) : (
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 2rem; color: #8b949e;">
+                  No teachers registered yet. Add them in the Admin Panel!
                 </td>
               </tr>
             )}

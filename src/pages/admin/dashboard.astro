@@ -1,0 +1,187 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import sql from '../../db/index.js';
+
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+try { await sql`ALTER TABLE attendees ADD COLUMN IF NOT EXISTS is_teacher BOOLEAN DEFAULT false`; } catch (e) {}
+
+const attendeesResult = await sql`
+  SELECT a.id, a.name, a.group_id, g.name as group_name, a.emeralds, COALESCE(a.is_teacher, false) as is_teacher
+  FROM attendees a
+  LEFT JOIN groups g ON a.group_id = g.id
+  ORDER BY a.name ASC
+`;
+
+const groupsResult = await sql`SELECT id, name FROM groups ORDER BY name ASC`;
+
+const attendees = attendeesResult || [];
+const groups = groupsResult || [];
+---
+
+<Layout title="Admin Dashboard - User Manager">
+  <main class="min-h-screen bg-gray-900 text-white p-8">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
+          Admin Panel: User & Emerald Manager
+        </h1>
+        <div class="space-x-4">
+          <a href="/admin/scanner" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium transition-colors">
+            NFC Scanner
+          </a>
+          <a href="/attendance" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-medium transition-colors">
+            Live Rankings
+          </a>
+        </div>
+      </div>
+
+      <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-900 text-gray-400 border-b border-gray-700">
+                <th class="p-4 font-semibold w-16">ID</th>
+                <th class="p-4 font-semibold w-1/4">Name</th>
+                <th class="p-4 font-semibold w-1/5">Group</th>
+                <th class="p-4 font-semibold w-32 text-center">Teacher?</th>
+                <th class="p-4 font-semibold w-32 text-center text-emerald-400">Emeralds</th>
+                <th class="p-4 font-semibold w-1/5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-700">
+              {attendees.map(user => (
+                <tr class="hover:bg-gray-750 transition-colors group" data-user-id={user.id}>
+                  <td class="p-4 text-gray-500">#{user.id}</td>
+                  
+                  <td class="p-4">
+                    <input type="text" class="edit-name bg-gray-900 border border-gray-600 rounded px-3 py-1.5 w-full focus:border-emerald-500 focus:outline-none" value={user.name} />
+                  </td>
+
+                  <td class="p-4">
+                    <select class="edit-group bg-gray-900 border border-gray-600 rounded px-3 py-1.5 w-full focus:border-emerald-500 focus:outline-none">
+                      <option value="">No Group</option>
+                      {groups.map(g => (
+                        <option value={g.id} selected={user.group_id === g.id}>{g.name}</option>
+                      ))}
+                    </select>
+                  </td>
+
+                  <td class="p-4 text-center">
+                    <input type="checkbox" class="edit-teacher w-5 h-5 accent-emerald-500 bg-gray-900 border-gray-600 rounded cursor-pointer" checked={user.is_teacher} />
+                  </td>
+
+                  <td class="p-4">
+                    <div class="flex items-center justify-center space-x-2">
+                      <button class="btn-emerald-sub w-8 h-8 rounded bg-red-900/50 hover:bg-red-600 text-red-100 flex items-center justify-center font-bold text-lg transition-colors">-</button>
+                      <input type="number" class="edit-emeralds bg-gray-900 border border-gray-600 rounded w-16 text-center py-1 font-bold text-emerald-400 hide-arrows" value={user.emeralds || 0} />
+                      <button class="btn-emerald-add w-8 h-8 rounded bg-emerald-900/50 hover:bg-emerald-600 text-emerald-100 flex items-center justify-center font-bold text-lg transition-colors">+</button>
+                    </div>
+                  </td>
+
+                  <td class="p-4 text-right space-x-2 whitespace-nowrap">
+                    <button class="btn-save bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded font-medium transition-colors opacity-50 cursor-not-allowed" disabled>
+                      Saved
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              
+              {attendees.length === 0 && (
+                <tr>
+                  <td colspan="6" class="p-8 text-center text-gray-500">No users found. Go scan someone to add them!</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  /* Hide up/down arrows in number inputs */
+  .hide-arrows::-webkit-outer-spin-button,
+  .hide-arrows::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .hide-arrows {
+    -moz-appearance: textfield;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Keep track of changes and enable save button
+    const rows = document.querySelectorAll('tbody tr[data-user-id]');
+    
+    rows.forEach(row => {
+      const id = row.getAttribute('data-user-id');
+      const nameInput = row.querySelector('.edit-name') as HTMLInputElement;
+      const groupSelect = row.querySelector('.edit-group') as HTMLSelectElement;
+      const teacherCheck = row.querySelector('.edit-teacher') as HTMLInputElement;
+      const emeraldsInput = row.querySelector('.edit-emeralds') as HTMLInputElement;
+      
+      const saveBtn = row.querySelector('.btn-save') as HTMLButtonElement;
+      const btnAdd = row.querySelector('.btn-emerald-add') as HTMLButtonElement;
+      const btnSub = row.querySelector('.btn-emerald-sub') as HTMLButtonElement;
+
+      // Enable save button when inputs change
+      const enableSave = () => {
+        saveBtn.disabled = false;
+        saveBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-emerald-600');
+        saveBtn.classList.add('bg-blue-600', 'hover:bg-blue-500');
+        saveBtn.textContent = 'Save';
+      };
+
+      [nameInput, groupSelect, teacherCheck, emeraldsInput].forEach(el => {
+        el.addEventListener('input', enableSave);
+        el.addEventListener('change', enableSave);
+      });
+
+      btnAdd.addEventListener('click', () => {
+        emeraldsInput.value = (parseInt(emeraldsInput.value || '0') + 1).toString();
+        enableSave();
+      });
+
+      btnSub.addEventListener('click', () => {
+        let val = parseInt(emeraldsInput.value || '0');
+        emeraldsInput.value = (val - 1).toString();
+        enableSave();
+      });
+
+      saveBtn.addEventListener('click', async () => {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+        
+        try {
+          const res = await fetch(`/api/admin/users/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: nameInput.value,
+              group_id: groupSelect.value ? parseInt(groupSelect.value) : null,
+              is_teacher: teacherCheck.checked,
+              emeralds: parseInt(emeraldsInput.value || '0')
+            })
+          });
+
+          if (res.ok) {
+            saveBtn.textContent = 'Saved';
+            saveBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-emerald-600');
+            saveBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
+          } else {
+            throw new Error('Failed');
+          }
+        } catch (e) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Error';
+          saveBtn.classList.add('bg-red-600');
+        }
+      });
+    });
+  });
+</script>
