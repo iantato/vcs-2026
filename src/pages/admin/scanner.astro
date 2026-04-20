@@ -40,16 +40,30 @@ try {
         </div>
         <div style="margin-top: 1rem; text-align: left;">
           <label for="group-select" style="color: #c9d1d9; display: block; margin-bottom: 0.5rem;">Assign to Group:</label>
-          <select id="group-select" class="mc-input">
-             {availableGroups.length > 0 ? (
-               availableGroups.map((grp) => (
-                 <option value={grp.id}>{grp.name}</option>
-               ))
-             ) : (
-               <option value="">No groups available</option>
-             )}
-          </select>
+          <div style="display: flex; gap: 0.5rem;">
+            <select id="group-select" class="mc-input" style="flex-grow: 1;">
+               {availableGroups.length > 0 ? (
+                 availableGroups.map((grp) => (
+                   <option value={grp.id}>{grp.name}</option>
+                 ))
+               ) : (
+                 <option value="">No groups available</option>
+               )}
+            </select>
+            <button class="mc-button" id="add-group-btn" type="button" style="padding: 0 1rem; background: rgba(35, 134, 54, 0.8);">+</button>
+          </div>
         </div>
+
+        <!-- Add Group Inline Input -->
+        <div id="add-group-form" style="display: none; margin-top: 1rem; text-align: left; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 4px; border: 1px dashed #30363d;">
+          <label for="new-group-name" style="color: #c9d1d9; display: block; margin-bottom: 0.5rem;">New Group Name:</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="text" id="new-group-name" class="mc-input" placeholder="Diamond Diggers" style="flex-grow: 1;" />
+            <button class="mc-button" id="save-new-group-btn" type="button" style="padding: 0 1rem;">Add</button>
+          </div>
+          <p id="group-error-msg" style="color: #ff5555; font-size: 0.85rem; margin-top: 0.5rem; display: none;"></p>
+        </div>
+
         <button class="mc-button" id="save-new-user" style="margin-top: 1.5rem; width: 100%;">Register & Log Attendance</button>
       </div>
 
@@ -86,6 +100,71 @@ try {
   const saveBtn = document.getElementById('save-new-user');
   const profileNameInput = document.getElementById('profile-name') as HTMLInputElement;
   const groupSelect = document.getElementById('group-select') as HTMLSelectElement;
+
+  // Add Group Elements
+  const addGroupBtn = document.getElementById('add-group-btn');
+  const addGroupForm = document.getElementById('add-group-form');
+  const newGroupNameInput = document.getElementById('new-group-name') as HTMLInputElement;
+  const saveNewGroupBtn = document.getElementById('save-new-group-btn');
+  const groupErrorMsg = document.getElementById('group-error-msg');
+
+  // Toggle Group Creation Panel
+  addGroupBtn?.addEventListener('click', () => {
+    if (addGroupForm) {
+      addGroupForm.style.display = addGroupForm.style.display === 'none' ? 'block' : 'none';
+      if (addGroupForm.style.display === 'block' && newGroupNameInput) {
+        newGroupNameInput.focus();
+      }
+    }
+  });
+
+  // Save new Group to DB via API
+  saveNewGroupBtn?.addEventListener('click', async () => {
+    const rawName = newGroupNameInput?.value.trim();
+    if (!rawName) return;
+
+    try {
+      if(saveNewGroupBtn) saveNewGroupBtn.innerText = '...';
+      const res = await fetch('/api/groups/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: rawName })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.group) {
+        // Add to dropdown
+        const opt = document.createElement('option');
+        opt.value = data.group.id;
+        opt.text = data.group.name;
+        opt.selected = true;
+        groupSelect?.appendChild(opt);
+
+        // Remove "No groups available" if it's there
+        if(groupSelect && groupSelect.options[0].value === "") {
+          groupSelect.options[0].remove();
+        }
+
+        // Hide UI
+        if(addGroupForm) addGroupForm.style.display = 'none';
+        if(newGroupNameInput) newGroupNameInput.value = '';
+        if(groupErrorMsg) groupErrorMsg.style.display = 'none';
+      } else {
+        if(groupErrorMsg) {
+          groupErrorMsg.innerText = data.error || 'Failed to create group';
+          groupErrorMsg.style.display = 'block';
+        }
+      }
+    } catch (e) {
+      if(groupErrorMsg) {
+        groupErrorMsg.innerText = 'Network error. Check console.';
+        groupErrorMsg.style.display = 'block';
+      }
+      console.error(e);
+    } finally {
+      if(saveNewGroupBtn) saveNewGroupBtn.innerText = 'Add';
+    }
+  });
 
   async function logAttendance(uid: string) {
     try {
