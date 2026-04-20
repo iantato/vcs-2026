@@ -22,6 +22,7 @@ try {
       COALESCE(a.emeralds, 0) as emeralds,
       COALESCE(COUNT(DISTINCT ar.attended_date), 0) as days,
       a.is_teacher,
+      a.avatar_url,
       CASE
         WHEN COALESCE(COUNT(DISTINCT ar.attended_date), 0) >= 5 THEN 'Netherite'
         WHEN COALESCE(COUNT(DISTINCT ar.attended_date), 0) >= 4 THEN 'Diamond'
@@ -33,7 +34,7 @@ try {
     LEFT JOIN groups g ON a.group_id = g.id
     LEFT JOIN attendance_records ar ON a.id = ar.attendee_id
     WHERE a.is_teacher = false OR a.is_teacher IS NULL
-    GROUP BY a.id, a.name, g.name, a.emeralds, a.is_teacher
+    GROUP BY a.id, a.name, g.name, a.emeralds, a.is_teacher, a.avatar_url
     ORDER BY emeralds DESC, days DESC, a.name ASC
   `;
 
@@ -42,13 +43,14 @@ try {
       a.id,
       a.name,
       g.name as group,
+      a.avatar_url,
       COALESCE(a.emeralds, 0) as emeralds,
       COALESCE(COUNT(DISTINCT ar.attended_date), 0) as days
     FROM attendees a
     LEFT JOIN groups g ON a.group_id = g.id
     LEFT JOIN attendance_records ar ON a.id = ar.attendee_id
     WHERE a.is_teacher = true
-    GROUP BY a.id, a.name, g.name, a.emeralds
+    GROUP BY a.id, a.name, g.name, a.emeralds, a.avatar_url
     ORDER BY emeralds DESC, days DESC, a.name ASC
   `;
 
@@ -144,14 +146,16 @@ const ranks = {
             </tr>
           </thead>
           <tbody>
-            {attendees.length > 0 ? attendees.map((user, index) => (
+            {attendees.length > 0 ? attendees.map((user, index) => {
+              const avatarSrc = user.avatar_url || `https://minotar.net/avatar/${user.name}/32.png`;
+              return (
               <tr>
                 <td data-label="#" style="text-align: center; font-family: var(--font-minecraft-ten); color: #8b949e; font-size: 1.2rem;">
                   {index + 1}
                 </td>
                 <td data-label="Profile" style="text-align: left;">
                   <div class="user-cell">
-                    <img src={`https://minotar.net/avatar/${user.name}/32.png`} alt={`${user.name}'s Head`} class="avatar-head" onerror="this.src='/favicon.svg'"/>
+                    <img src={avatarSrc} alt={`${user.name}'s Head`} class="avatar-head" onerror="this.src='/favicon.svg'"/>
                     <span class="user-name">{user.name}</span>
                   </div>
                 </td>
@@ -172,7 +176,7 @@ const ranks = {
                   </div>
                 </td>
               </tr>
-            )) : (
+            )}) : (
               <tr>
                 <td colspan="5" style="text-align: center; padding: 2rem; color: #8b949e;">
                   No attendees registered yet. Scan an NFC tag to get started!
@@ -199,29 +203,31 @@ const ranks = {
             </tr>
           </thead>
           <tbody>
-            {teachers.length > 0 ? teachers.map((user, index) => (
+            {teachers.length > 0 ? teachers.map((user, index) => {
+              const avatarSrc = user.avatar_url || `https://minotar.net/avatar/${user.name}/32.png`;
+              return (
               <tr>
                 <td data-label="#" style="text-align: center; font-family: var(--font-minecraft-ten); color: #8b949e; font-size: 1.2rem;">
                   {index + 1}
                 </td>
                 <td data-label="Teacher" style="text-align: left;">
                   <div class="user-cell">
-                    <img src={`https://minotar.net/avatar/${user.name}/32.png`} alt={`${user.name}'s Head`} class="avatar-head" onerror="this.src='/favicon.svg'"/>
+                    <img src={avatarSrc} alt={`${user.name}'s Head`} class="avatar-head" onerror="this.src='/favicon.svg'"/>
                     <span class="user-name" style="color: #ffb86c;">{user.name}</span>
                   </div>
                 </td>
                 <td data-label="Group" style="text-align: center;">
-                  <span class="group-label">{user.group || 'Unassigned'}</span> 
+                  <span class="group-label">{user.group || 'Unassigned'}</span>
                 </td>
                 <td data-label="Emeralds" style="text-align: center; font-family: var(--font-minecraft-ten); color: #55FF55; font-size: 1.2rem;">
                   {user.emeralds || 0}
                   <img src="https://minecraft.wiki/images/Emerald_JE3_BE3.png" alt="Emerald" width="20" style="vertical-align: middle; margin-left: 4px; image-rendering: pixelated;" onerror="this.src='/favicon.svg'"/>
                 </td>
-                <td data-label="Attendance (Days)" style="text-align: center;">      
+                <td data-label="Attendance (Days)" style="text-align: center;">
                   <span class="score-label">{user.days}</span>
                 </td>
               </tr>
-            )) : (
+            )}) : (
               <tr>
                 <td colspan="5" style="text-align: center; padding: 2rem; color: #8b949e;">
                   No teachers registered yet. Add them in the Admin Panel!

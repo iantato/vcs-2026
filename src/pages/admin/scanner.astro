@@ -7,7 +7,7 @@ let availableGroups = [];
 let teachers = [];
 try {
   try { await sql`ALTER TABLE attendees ADD COLUMN IF NOT EXISTS is_teacher BOOLEAN DEFAULT false`; } catch(e) {}
-  
+
   const groupsData = await sql`
     SELECT id, name FROM groups ORDER BY name ASC
   `;
